@@ -98,7 +98,7 @@ export const deleteSale = expressAsync(async(req, res)=> {
       const customer = await CustomerModel.findById(sale.customer);
       if(customer) {
         customer.totalSale = Number(customer.totalSale - sale.itemsPrice);
-        customer.saleList.filter((item)=> item._id !== sale._id);
+        customer.saleList = customer.saleList.filter((item)=> item._id !== sale._id);
         await customer.save();
       } else {
         res.status(404);

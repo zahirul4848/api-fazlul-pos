@@ -11,7 +11,7 @@ export interface ISupplier extends Document {
   totalPurchase: number;
   totalPayment: number;
   dueAdjustment: IDueAdjustment[];
-  purchaseList: [_id: Types.ObjectId];
+  purchaseList: {_id: Types.ObjectId}[];
 }
 
 const dueAdjustmentSchema: Schema<IDueAdjustment> = new Schema({

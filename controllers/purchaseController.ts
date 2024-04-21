@@ -97,7 +97,7 @@ export const deletePurchase = expressAsync(async(req, res)=> {
       const supplier = await SupplierModel.findById(purchase.supplier);
       if(supplier) {
         supplier.totalPurchase = Number(supplier.totalPurchase - purchase.itemsPrice);
-        supplier.purchaseList.filter((item)=> item._id !== purchase._id);
+        supplier.purchaseList = supplier.purchaseList.filter((item)=> item._id !== purchase._id);
         await supplier.save();
       } else {
         res.status(404);

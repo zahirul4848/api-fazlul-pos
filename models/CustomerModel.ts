@@ -12,7 +12,7 @@ export interface ICustomer extends Document {
   totalSale: number;
   totalPayment: number;
   dueAdjustment: IDueAdjustment[];
-  saleList: [_id: Types.ObjectId];
+  saleList: {_id: Types.ObjectId}[];
 }
 
 const dueAdjustmentSchema: Schema<IDueAdjustment> = new Schema({
