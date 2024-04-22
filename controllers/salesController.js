@@ -110,7 +110,7 @@ exports.deleteSale = (0, express_async_handler_1.default)((req, res) => __awaite
             const customer = yield CustomerModel_1.default.findById(sale.customer);
             if (customer) {
                 customer.totalSale = Number(customer.totalSale - sale.itemsPrice);
-                customer.saleList = customer.saleList.filter((item) => item._id !== sale._id);
+                customer.saleList = customer.saleList.filter((item) => item._id.toString() !== sale._id.toString());
                 yield customer.save();
             }
             else {

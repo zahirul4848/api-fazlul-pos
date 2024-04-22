@@ -108,7 +108,7 @@ exports.deletePurchase = (0, express_async_handler_1.default)((req, res) => __aw
             const supplier = yield SupplierModel_1.default.findById(purchase.supplier);
             if (supplier) {
                 supplier.totalPurchase = Number(supplier.totalPurchase - purchase.itemsPrice);
-                supplier.purchaseList = supplier.purchaseList.filter((item) => item._id !== purchase._id);
+                supplier.purchaseList = supplier.purchaseList.filter((item) => item._id.toString() !== purchase._id.toString());
                 yield supplier.save();
             }
             else {
