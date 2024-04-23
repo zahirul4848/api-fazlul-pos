@@ -47,17 +47,11 @@ const salesSchema = new mongoose_1.Schema({
         required: true,
     },
     payment: {
-        type: Number,
-    },
-    remarks: {
-        type: String,
-    },
-    dueAdjustment: [
-        {
-            amount: { type: Number },
-            paidAt: { type: Date },
-        }
-    ]
+        amount: { type: Number },
+        paymentMethod: { type: String },
+        due: { type: Number },
+        dueAdjustmentId: { type: String }
+    }
 }, {
     timestamps: true
 });

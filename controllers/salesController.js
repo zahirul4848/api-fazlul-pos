@@ -44,6 +44,11 @@ exports.getSale = (0, express_async_handler_1.default)((req, res) => __awaiter(v
 }));
 // create new sale // api/sale // post // protected by user
 exports.createSale = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const customer = yield CustomerModel_1.default.findById(req.body.customer);
+    if (!customer) {
+        res.status(404);
+        throw new Error("Customer not found");
+    }
     if (req.body.salesItems.length === 0) {
         res.status(400);
         throw new Error("No Product Selected");
@@ -68,24 +73,32 @@ exports.createSale = (0, express_async_handler_1.default)((req, res) => __awaite
             product.stock = Number(product.stock - salesItem.count);
             yield product.save();
         }));
+        // update customer 1
+        if (req.body.paymentAmount > 0) {
+            customer.totalPayment = Number(customer.totalPayment + req.body.paymentAmount);
+            customer.dueAdjustment.push({
+                amount: req.body.paymentAmount,
+                paymentMethod: req.body.paymentMethod,
+            });
+            yield customer.save();
+        }
         const sale = new SalesModel_1.default({
             customer: req.body.customer,
             orderNumber: counter === null || counter === void 0 ? void 0 : counter.seq,
             salesItems: req.body.salesItems,
             itemsPrice: req.body.itemsPrice,
+            payment: req.body.paymentAmount > 0 ? {
+                amount: req.body.paymentAmount,
+                paymentMethod: req.body.paymentMethod,
+                due: Number(req.body.itemsPrice - req.body.paymentAmount),
+                dueAdjustmentId: customer.dueAdjustment[0]._id,
+            } : {},
         });
         const newSale = yield sale.save();
-        // update customer
-        const customer = yield CustomerModel_1.default.findById(req.body.customer);
-        if (customer) {
-            customer.totalSale = Number(customer.totalSale + req.body.itemsPrice);
-            customer.saleList.push(newSale._id);
-            yield customer.save();
-        }
-        else {
-            res.status(404);
-            throw new Error("Customer not found");
-        }
+        // update customer 2
+        customer.totalSale = Number(customer.totalSale + req.body.itemsPrice);
+        customer.saleList.push(newSale._id);
+        yield customer.save();
         res.status(201).json({ message: "Sale Placed Successfully" });
     }
     catch (err) {
@@ -95,6 +108,7 @@ exports.createSale = (0, express_async_handler_1.default)((req, res) => __awaite
 }));
 // delete sale by id // api/sale/:id // delete // protected by admin
 exports.deleteSale = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         const sale = yield SalesModel_1.default.findById(req.params.id);
         if (sale) {
@@ -111,6 +125,10 @@ exports.deleteSale = (0, express_async_handler_1.default)((req, res) => __awaite
             if (customer) {
                 customer.totalSale = Number(customer.totalSale - sale.itemsPrice);
                 customer.saleList = customer.saleList.filter((item) => item._id.toString() !== sale._id.toString());
+                if (((_a = sale.payment) === null || _a === void 0 ? void 0 : _a.amount) > 0) {
+                    customer.totalPayment = Number(customer.totalPayment - sale.payment.amount);
+                    customer.dueAdjustment = customer.dueAdjustment.filter((item) => { var _a; return ((_a = item._id) === null || _a === void 0 ? void 0 : _a.toString()) !== sale.payment.dueAdjustmentId.toString(); });
+                }
                 yield customer.save();
             }
             else {

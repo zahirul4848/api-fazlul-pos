@@ -11,13 +11,12 @@ export interface ISales extends Document {
   }[];
   orderNumber: string;
   itemsPrice: number;
-  payment: number;
-  remarks?: string;
-  dueAdjustment: 
-    { 
-      amount: number;
-      paidAt: Date;
-    }[]
+  payment: {
+    amount: number;
+    paymentMethod: string;
+    due: number;
+    dueAdjustmentId: string;
+  };
 }
 
 const salesSchema: Schema<ISales> = new Schema({
@@ -43,17 +42,11 @@ const salesSchema: Schema<ISales> = new Schema({
     required: true,
   },
   payment: {
-    type: Number, 
-  },
-  remarks: {
-    type: String,
-  },
-  dueAdjustment: [
-    { 
-      amount: {type: Number},
-      paidAt: {type: Date},
-    }
-  ]
+    amount: {type: Number}, 
+    paymentMethod: {type: String},
+    due: {type: Number},
+    dueAdjustmentId: {type: String}
+  }
 }, {
   timestamps: true
 })

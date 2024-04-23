@@ -30,6 +30,11 @@ export const getSale = expressAsync(async(req, res)=> {
 
 // create new sale // api/sale // post // protected by user
 export const createSale = expressAsync(async(req, res)=> {
+  const customer = await CustomerModel.findById(req.body.customer);
+  if(!customer) {
+    res.status(404);
+    throw new Error("Customer not found");
+  }
   if(req.body.salesItems.length === 0) {
     res.status(400);
     throw new Error("No Product Selected");
@@ -54,24 +59,34 @@ export const createSale = expressAsync(async(req, res)=> {
       product.stock = Number(product.stock - salesItem.count);
       await product.save();
     });
+    // update customer 1
+    if(req.body.paymentAmount > 0) {
+      customer.totalPayment = Number(customer.totalPayment + req.body.paymentAmount);
+      customer.dueAdjustment.push({
+        amount: req.body.paymentAmount,
+        paymentMethod: req.body.paymentMethod,
+      })
+      await customer.save();
+    }
     const sale = new SalesModel({
       customer: req.body.customer,
       orderNumber: counter?.seq,
       salesItems: req.body.salesItems,
       itemsPrice: req.body.itemsPrice,
+      
+      payment: req.body.paymentAmount > 0 ? {
+        amount: req.body.paymentAmount,
+        paymentMethod: req.body.paymentMethod,
+        due: Number(req.body.itemsPrice - req.body.paymentAmount),
+        dueAdjustmentId: customer.dueAdjustment[0]._id,
+      } : {},
     });
     const newSale = await sale.save();
 
-    // update customer
-    const customer = await CustomerModel.findById(req.body.customer);
-    if(customer) {
-      customer.totalSale = Number(customer.totalSale + req.body.itemsPrice);
-      customer.saleList.push(newSale._id);
-      await customer.save();
-    } else {
-      res.status(404);
-      throw new Error("Customer not found");
-    }
+    // update customer 2
+    customer.totalSale = Number(customer.totalSale + req.body.itemsPrice);
+    customer.saleList.push(newSale._id);
+    await customer.save();
 
     res.status(201).json({message: "Sale Placed Successfully"});
   } catch (err: any) {
@@ -98,7 +113,17 @@ export const deleteSale = expressAsync(async(req, res)=> {
       const customer = await CustomerModel.findById(sale.customer);
       if(customer) {
         customer.totalSale = Number(customer.totalSale - sale.itemsPrice);
-        customer.saleList = customer.saleList.filter((item)=> item._id.toString() !== sale._id.toString());
+        customer.saleList = customer.saleList.filter((item)=> 
+          item._id.toString() !== sale._id.toString()
+        );
+        
+        if(sale.payment?.amount > 0) {
+          customer.totalPayment = Number(customer.totalPayment - sale.payment.amount);
+          customer.dueAdjustment = customer.dueAdjustment.filter((item)=> 
+            item._id?.toString() !== sale.payment.dueAdjustmentId.toString()
+          );
+        }
+        
         await customer.save();
       } else {
         res.status(404);
