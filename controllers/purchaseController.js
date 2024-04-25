@@ -44,6 +44,11 @@ exports.getPurchase = (0, express_async_handler_1.default)((req, res) => __await
 }));
 // create new purchase // api/purchase // post // protected by user
 exports.createPurchase = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const supplier = yield SupplierModel_1.default.findById(req.body.supplier);
+    if (!supplier) {
+        res.status(404);
+        throw new Error("Supplier not found");
+    }
     if (req.body.purchaseItems.length === 0) {
         res.status(400);
         throw new Error("No Product Selected");
@@ -64,27 +69,33 @@ exports.createPurchase = (0, express_async_handler_1.default)((req, res) => __aw
             product.stock = Number(product.stock + purchaseItem.count);
             yield product.save();
         }));
+        // update supplier 1
+        if (req.body.paymentAmount > 0) {
+            supplier.totalPayment = Number(supplier.totalPayment + req.body.paymentAmount);
+            supplier.dueAdjustment.push({
+                amount: req.body.paymentAmount,
+                paymentMethod: req.body.paymentMethod,
+            });
+            yield supplier.save();
+        }
         const purchase = new PurchaseModel_1.default({
             supplier: req.body.supplier,
             orderNumber: counter === null || counter === void 0 ? void 0 : counter.seq,
             purchaseItems: req.body.purchaseItems,
             itemsPrice: req.body.itemsPrice,
+            payment: req.body.paymentAmount > 0 ? {
+                amount: req.body.paymentAmount,
+                paymentMethod: req.body.paymentMethod,
+                due: Number(req.body.itemsPrice - req.body.paymentAmount),
+                dueAdjustmentId: supplier.dueAdjustment[0]._id,
+            } : {},
         });
         const newPurchase = yield purchase.save();
         // update supplier
-        const supplier = yield SupplierModel_1.default.findById(req.body.supplier);
-        if (supplier) {
-            supplier.totalPurchase = Number(supplier.totalPurchase + req.body.itemsPrice);
-            supplier.purchaseList.push(newPurchase._id);
-            yield supplier.save();
-        }
-        else {
-            res.status(404);
-            throw new Error("Supplier not found");
-        }
-        res.status(201).json({
-            message: "Purchase Placed Successfully",
-        });
+        supplier.totalPurchase = Number(supplier.totalPurchase + req.body.itemsPrice);
+        supplier.purchaseList.push(newPurchase._id);
+        yield supplier.save();
+        res.status(201).json({ message: "Purchase Placed Successfully" });
     }
     catch (err) {
         res.status(400);
@@ -93,6 +104,7 @@ exports.createPurchase = (0, express_async_handler_1.default)((req, res) => __aw
 }));
 // delete purchase by id // api/purchase/:id // delete // protected by admin
 exports.deletePurchase = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         const purchase = yield PurchaseModel_1.default.findById(req.params.id);
         if (purchase) {
@@ -109,6 +121,13 @@ exports.deletePurchase = (0, express_async_handler_1.default)((req, res) => __aw
             if (supplier) {
                 supplier.totalPurchase = Number(supplier.totalPurchase - purchase.itemsPrice);
                 supplier.purchaseList = supplier.purchaseList.filter((item) => item._id.toString() !== purchase._id.toString());
+                if (((_a = purchase.payment) === null || _a === void 0 ? void 0 : _a.amount) > 0) {
+                    const item = supplier.dueAdjustment.find((item) => { var _a; return ((_a = item._id) === null || _a === void 0 ? void 0 : _a.toString()) == purchase.payment.dueAdjustmentId.toString(); });
+                    if (item) {
+                        supplier.totalPayment = Number(supplier.totalPayment - purchase.payment.amount);
+                        supplier.dueAdjustment = supplier.dueAdjustment.filter((item) => { var _a; return ((_a = item._id) === null || _a === void 0 ? void 0 : _a.toString()) !== purchase.payment.dueAdjustmentId.toString(); });
+                    }
+                }
                 yield supplier.save();
             }
             else {

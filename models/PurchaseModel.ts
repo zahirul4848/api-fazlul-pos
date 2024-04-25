@@ -11,6 +11,12 @@ export interface IPurchase extends Document {
   }[];
   orderNumber: string;
   itemsPrice: number;
+  payment: {
+    amount: number;
+    paymentMethod: string;
+    due: number;
+    dueAdjustmentId: string;
+  };
 }
 
 const purchaseSchema: Schema<IPurchase> = new Schema({
@@ -35,6 +41,12 @@ const purchaseSchema: Schema<IPurchase> = new Schema({
     type: Number, 
     required: true,
   },
+  payment: {
+    amount: {type: Number}, 
+    paymentMethod: {type: String},
+    due: {type: Number},
+    dueAdjustmentId: {type: String}
+  }
 }, {
   timestamps: true
 })

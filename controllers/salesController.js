@@ -126,8 +126,11 @@ exports.deleteSale = (0, express_async_handler_1.default)((req, res) => __awaite
                 customer.totalSale = Number(customer.totalSale - sale.itemsPrice);
                 customer.saleList = customer.saleList.filter((item) => item._id.toString() !== sale._id.toString());
                 if (((_a = sale.payment) === null || _a === void 0 ? void 0 : _a.amount) > 0) {
-                    customer.totalPayment = Number(customer.totalPayment - sale.payment.amount);
-                    customer.dueAdjustment = customer.dueAdjustment.filter((item) => { var _a; return ((_a = item._id) === null || _a === void 0 ? void 0 : _a.toString()) !== sale.payment.dueAdjustmentId.toString(); });
+                    const item = customer.dueAdjustment.find((item) => { var _a; return ((_a = item._id) === null || _a === void 0 ? void 0 : _a.toString()) == sale.payment.dueAdjustmentId.toString(); });
+                    if (item) {
+                        customer.totalPayment = Number(customer.totalPayment - sale.payment.amount);
+                        customer.dueAdjustment = customer.dueAdjustment.filter((item) => { var _a; return ((_a = item._id) === null || _a === void 0 ? void 0 : _a.toString()) !== sale.payment.dueAdjustmentId.toString(); });
+                    }
                 }
                 yield customer.save();
             }

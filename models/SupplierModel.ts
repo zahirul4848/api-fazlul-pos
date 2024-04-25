@@ -1,6 +1,7 @@
 import mongoose, {Document, Schema, Types} from "mongoose";
 
 export interface IDueAdjustment {
+  _id?: string;
   paymentMethod: string;
   amount: number;
 }

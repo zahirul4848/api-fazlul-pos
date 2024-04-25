@@ -118,10 +118,15 @@ export const deleteSale = expressAsync(async(req, res)=> {
         );
         
         if(sale.payment?.amount > 0) {
-          customer.totalPayment = Number(customer.totalPayment - sale.payment.amount);
-          customer.dueAdjustment = customer.dueAdjustment.filter((item)=> 
-            item._id?.toString() !== sale.payment.dueAdjustmentId.toString()
+          const item = customer.dueAdjustment.find((item)=> 
+            item._id?.toString() == sale.payment.dueAdjustmentId.toString()
           );
+          if(item) {
+            customer.totalPayment = Number(customer.totalPayment - sale.payment.amount);
+            customer.dueAdjustment = customer.dueAdjustment.filter((item)=> 
+              item._id?.toString() !== sale.payment.dueAdjustmentId.toString()
+            );
+          }
         }
         
         await customer.save();

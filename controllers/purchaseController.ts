@@ -30,6 +30,11 @@ export const getPurchase = expressAsync(async(req, res)=> {
 
 // create new purchase // api/purchase // post // protected by user
 export const createPurchase = expressAsync(async(req, res)=> {
+  const supplier = await SupplierModel.findById(req.body.supplier);
+  if(!supplier) {
+    res.status(404);
+    throw new Error("Supplier not found");
+  }
   if(req.body.purchaseItems.length === 0) {
     res.status(400);
     throw new Error("No Product Selected");
@@ -50,29 +55,38 @@ export const createPurchase = expressAsync(async(req, res)=> {
       product.stock = Number(product.stock + purchaseItem.count);
       await product.save();
     });
+    
+    // update supplier 1
+    if(req.body.paymentAmount > 0) {
+      supplier.totalPayment = Number(supplier.totalPayment + req.body.paymentAmount);
+      supplier.dueAdjustment.push({
+        amount: req.body.paymentAmount,
+        paymentMethod: req.body.paymentMethod,
+      })
+      await supplier.save();
+    }
     const purchase = new PurchaseModel({
       supplier: req.body.supplier,
       orderNumber: counter?.seq,
       purchaseItems: req.body.purchaseItems,
       itemsPrice: req.body.itemsPrice,
+      
+      payment: req.body.paymentAmount > 0 ? {
+        amount: req.body.paymentAmount,
+        paymentMethod: req.body.paymentMethod,
+        due: Number(req.body.itemsPrice - req.body.paymentAmount),
+        dueAdjustmentId: supplier.dueAdjustment[0]._id,
+      } : {},
     });
 
     const newPurchase = await purchase.save();
   
     // update supplier
-    const supplier = await SupplierModel.findById(req.body.supplier);
-    if(supplier) {
-      supplier.totalPurchase = Number(supplier.totalPurchase + req.body.itemsPrice);
-      supplier.purchaseList.push(newPurchase._id);
-      await supplier.save();
-    } else {
-      res.status(404);
-      throw new Error("Supplier not found");
-    }
+    supplier.totalPurchase = Number(supplier.totalPurchase + req.body.itemsPrice);
+    supplier.purchaseList.push(newPurchase._id);
+    await supplier.save();
    
-    res.status(201).json({
-      message: "Purchase Placed Successfully",
-    });      
+    res.status(201).json({message: "Purchase Placed Successfully"});      
   } catch (err: any) {
     res.status(400);
     throw new Error(err.message);
@@ -98,6 +112,19 @@ export const deletePurchase = expressAsync(async(req, res)=> {
       if(supplier) {
         supplier.totalPurchase = Number(supplier.totalPurchase - purchase.itemsPrice);
         supplier.purchaseList = supplier.purchaseList.filter((item)=> item._id.toString() !== purchase._id.toString());
+        
+        if(purchase.payment?.amount > 0) {
+          const item = supplier.dueAdjustment.find((item)=> 
+            item._id?.toString() == purchase.payment.dueAdjustmentId.toString()
+          );
+          if(item) {
+            supplier.totalPayment = Number(supplier.totalPayment - purchase.payment.amount);
+            supplier.dueAdjustment = supplier.dueAdjustment.filter((item)=> 
+              item._id?.toString() !== purchase.payment.dueAdjustmentId.toString()
+            );
+          }
+        }        
+        
         await supplier.save();
       } else {
         res.status(404);

@@ -46,6 +46,12 @@ const purchaseSchema = new mongoose_1.Schema({
         type: Number,
         required: true,
     },
+    payment: {
+        amount: { type: Number },
+        paymentMethod: { type: String },
+        due: { type: Number },
+        dueAdjustmentId: { type: String }
+    }
 }, {
     timestamps: true
 });
