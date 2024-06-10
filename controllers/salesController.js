@@ -87,6 +87,7 @@ exports.createSale = (0, express_async_handler_1.default)((req, res) => __awaite
             orderNumber: counter === null || counter === void 0 ? void 0 : counter.seq,
             salesItems: req.body.salesItems,
             itemsPrice: req.body.itemsPrice,
+            previousDue: req.body.previousDue,
             payment: req.body.paymentAmount > 0 ? {
                 amount: req.body.paymentAmount,
                 paymentMethod: req.body.paymentMethod,

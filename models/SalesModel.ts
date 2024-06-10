@@ -17,6 +17,7 @@ export interface ISales extends Document {
     due: number;
     dueAdjustmentId: string;
   };
+  previousDue: number;
 }
 
 const salesSchema: Schema<ISales> = new Schema({
@@ -46,7 +47,11 @@ const salesSchema: Schema<ISales> = new Schema({
     paymentMethod: {type: String},
     due: {type: Number},
     dueAdjustmentId: {type: String}
-  }
+  },
+  previousDue: {
+    type: Number, 
+    required: true,
+  },
 }, {
   timestamps: true
 })

@@ -73,7 +73,7 @@ export const createSale = expressAsync(async(req, res)=> {
       orderNumber: counter?.seq,
       salesItems: req.body.salesItems,
       itemsPrice: req.body.itemsPrice,
-      
+      previousDue: req.body.previousDue,
       payment: req.body.paymentAmount > 0 ? {
         amount: req.body.paymentAmount,
         paymentMethod: req.body.paymentMethod,

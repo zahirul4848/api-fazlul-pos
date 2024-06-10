@@ -51,7 +51,11 @@ const salesSchema = new mongoose_1.Schema({
         paymentMethod: { type: String },
         due: { type: Number },
         dueAdjustmentId: { type: String }
-    }
+    },
+    previousDue: {
+        type: Number,
+        required: true,
+    },
 }, {
     timestamps: true
 });
