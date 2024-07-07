@@ -8,6 +8,7 @@ import {notFound, errorHandler} from "./middleware/errorMiddleware";
 // routers
 import userRouter from "./routes/userRouter";
 import categoryRouter from "./routes/categoryRouter";
+import transactionRouter from "./routes/transactionRouter";
 // import uploadRouter from "./routes/uploadRouter.js";
 import productRouter from "./routes/productRouter";
 import saleRouter from "./routes/salesRouter";
@@ -27,6 +28,7 @@ app.use(cors());
 // routes
 app.use("/api/user", userRouter);
 app.use("/api/category", categoryRouter);
+app.use("/api/transaction", transactionRouter);
 // app.use("/api/upload", uploadRouter);
 app.use("/api/product", productRouter);
 app.use("/api/sale", saleRouter);

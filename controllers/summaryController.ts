@@ -7,6 +7,7 @@ import PurchaseModel from "../models/PurchaseModel";
 import UserModel from "../models/UserModel";
 import CustomerModel from "../models/CustomerModel";
 import SupplierModel from "../models/SupplierModel";
+import TransactionModel from "../models/TransactionModel";
 
 // get all summary // api/summary // get // not protected
 export const getSummary = expressAsync(async(req: Request, res: Response)=> {
@@ -151,6 +152,17 @@ export const getSummary = expressAsync(async(req: Request, res: Response)=> {
       },
     ])
 
+    // transaction
+
+    const transactionData = await TransactionModel.aggregate([
+      {
+        $group: {
+          _id: '$transactionType',
+          total: { $sum: "$amount" }
+        }
+      }
+    ]);
+
     res.status(201).json({
       monthlySalesArray, 
       salesMonth, 
@@ -167,6 +179,7 @@ export const getSummary = expressAsync(async(req: Request, res: Response)=> {
       totalSalesPayment,
       totalPurchaseDue,
       totalPurchasePayment,
+      transactionData
     });
   } catch (err: any) {
     res.status(400);

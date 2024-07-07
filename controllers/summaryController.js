@@ -21,6 +21,7 @@ const PurchaseModel_1 = __importDefault(require("../models/PurchaseModel"));
 const UserModel_1 = __importDefault(require("../models/UserModel"));
 const CustomerModel_1 = __importDefault(require("../models/CustomerModel"));
 const SupplierModel_1 = __importDefault(require("../models/SupplierModel"));
+const TransactionModel_1 = __importDefault(require("../models/TransactionModel"));
 // get all summary // api/summary // get // not protected
 exports.getSummary = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -157,6 +158,15 @@ exports.getSummary = (0, express_async_handler_1.default)((req, res) => __awaite
                 }
             },
         ]);
+        // transaction
+        const transactionData = yield TransactionModel_1.default.aggregate([
+            {
+                $group: {
+                    _id: '$transactionType',
+                    total: { $sum: "$amount" }
+                }
+            }
+        ]);
         res.status(201).json({
             monthlySalesArray,
             salesMonth,
@@ -173,6 +183,7 @@ exports.getSummary = (0, express_async_handler_1.default)((req, res) => __awaite
             totalSalesPayment,
             totalPurchaseDue,
             totalPurchasePayment,
+            transactionData
         });
     }
     catch (err) {

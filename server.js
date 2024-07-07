@@ -12,6 +12,7 @@ const errorMiddleware_1 = require("./middleware/errorMiddleware");
 // routers
 const userRouter_1 = __importDefault(require("./routes/userRouter"));
 const categoryRouter_1 = __importDefault(require("./routes/categoryRouter"));
+const transactionRouter_1 = __importDefault(require("./routes/transactionRouter"));
 // import uploadRouter from "./routes/uploadRouter.js";
 const productRouter_1 = __importDefault(require("./routes/productRouter"));
 const salesRouter_1 = __importDefault(require("./routes/salesRouter"));
@@ -28,6 +29,7 @@ app.use((0, cors_1.default)());
 // routes
 app.use("/api/user", userRouter_1.default);
 app.use("/api/category", categoryRouter_1.default);
+app.use("/api/transaction", transactionRouter_1.default);
 // app.use("/api/upload", uploadRouter);
 app.use("/api/product", productRouter_1.default);
 app.use("/api/sale", salesRouter_1.default);
