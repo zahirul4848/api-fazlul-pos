@@ -8,7 +8,7 @@ export const getAllSupplier = expressAsync(async(req: Request, res: Response)=> 
   const name = req.query.name || "";
   const nameFilter = name ? {name: {$regex: name, $options: "i"}} : {};
   try {
-    const supplier = await SupplierModel.find({...nameFilter});
+    const supplier = await SupplierModel.find({...nameFilter}).select("-dueAdjustment");
     res.status(201).json(supplier);
   } catch (err: any) {
     res.status(400);

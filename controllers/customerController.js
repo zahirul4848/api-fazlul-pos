@@ -20,7 +20,7 @@ exports.getAllCustomer = (0, express_async_handler_1.default)((req, res) => __aw
     const name = req.query.name || "";
     const nameFilter = name ? { name: { $regex: name, $options: "i" } } : {};
     try {
-        const customer = yield CustomerModel_1.default.find(Object.assign({}, nameFilter));
+        const customer = yield CustomerModel_1.default.find(Object.assign({}, nameFilter)).select("-dueAdjustment");
         res.status(201).json(customer);
     }
     catch (err) {

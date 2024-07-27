@@ -8,7 +8,7 @@ export const getAllCustomer = expressAsync(async(req: Request, res: Response)=> 
   const name = req.query.name || "";
   const nameFilter = name ? {name: {$regex: name, $options: "i"}} : {};
   try {
-    const customer = await CustomerModel.find({...nameFilter});
+    const customer = await CustomerModel.find({...nameFilter}).select("-dueAdjustment");
     res.status(201).json(customer);
   } catch (err: any) {
     res.status(400);
