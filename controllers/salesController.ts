@@ -6,11 +6,14 @@ import CustomerModel from "../models/CustomerModel";
 
 // get all sales // api/sale // get // protected by admin
 export const getAllSales = expressAsync(async(req, res)=> {
+  const pageSize = Number(req.query.pageSize) || 0;
+  const page = Number(req.query.pageNumber) || 1;
   const orderNumber = req.query.orderNumber || "";
   const orderNumberFilter = orderNumber ? {orderNumber: {$regex: orderNumber, $options: "i"}} : {};
   try {
-    const sales = await SalesModel.find({...orderNumberFilter}).sort({createdAt: -1}).populate("customer");
-    res.status(201).json(sales);
+    const count = await SalesModel.countDocuments({...orderNumberFilter});
+    const sales = await SalesModel.find({...orderNumberFilter}).sort({createdAt: -1}).populate({path: "customer", select: "name"}).skip(pageSize * (page - 1)).limit(pageSize).select("-salesItems");
+    res.status(201).json({sales, pages: Math.ceil(count / pageSize)});
   } catch (err: any) {
     res.status(400);
     throw new Error(err.message);

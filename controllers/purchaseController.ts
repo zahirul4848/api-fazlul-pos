@@ -6,11 +6,14 @@ import SupplierModel from "../models/SupplierModel";
 
 // get all purchase // api/purchase // get // protected by admin
 export const getAllPurchase = expressAsync(async(req, res)=> {
+  const pageSize = Number(req.query.pageSize) || 0;
+  const page = Number(req.query.pageNumber) || 1;
   const orderNumber = req.query.orderNumber || "";
   const orderNumberFilter = orderNumber ? {orderNumber: {$regex: orderNumber, $options: "i"}} : {};
   try {
-    const purchaseList = await PurchaseModel.find({...orderNumberFilter}).sort({createdAt: -1}).populate("supplier");
-    res.status(201).json(purchaseList);
+    const count = await PurchaseModel.countDocuments({...orderNumberFilter});
+    const purchaseList = await PurchaseModel.find({...orderNumberFilter}).sort({createdAt: -1}).populate({path: "supplier", select: "name"}).skip(pageSize * (page - 1)).limit(pageSize).select("-purchaseItems");
+    res.status(201).json({purchaseList, pages: Math.ceil(count / pageSize)});
   } catch (err: any) {
     res.status(400);
     throw new Error(err.message);

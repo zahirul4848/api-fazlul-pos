@@ -20,11 +20,14 @@ const ProductModel_1 = __importDefault(require("../models/ProductModel"));
 const CustomerModel_1 = __importDefault(require("../models/CustomerModel"));
 // get all sales // api/sale // get // protected by admin
 exports.getAllSales = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const pageSize = Number(req.query.pageSize) || 0;
+    const page = Number(req.query.pageNumber) || 1;
     const orderNumber = req.query.orderNumber || "";
     const orderNumberFilter = orderNumber ? { orderNumber: { $regex: orderNumber, $options: "i" } } : {};
     try {
-        const sales = yield SalesModel_1.default.find(Object.assign({}, orderNumberFilter)).sort({ createdAt: -1 }).populate("customer");
-        res.status(201).json(sales);
+        const count = yield SalesModel_1.default.countDocuments(Object.assign({}, orderNumberFilter));
+        const sales = yield SalesModel_1.default.find(Object.assign({}, orderNumberFilter)).sort({ createdAt: -1 }).populate({ path: "customer", select: "name" }).skip(pageSize * (page - 1)).limit(pageSize).select("-salesItems");
+        res.status(201).json({ sales, pages: Math.ceil(count / pageSize) });
     }
     catch (err) {
         res.status(400);
